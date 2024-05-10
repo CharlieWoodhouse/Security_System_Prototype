@@ -1,6 +1,6 @@
 # Security_System_Prototype
 The system will use ultrasonic  sensors and motorised mechanics to detect and track potential intrusions within the designated area. Upon  detection of suspicious activity, the system will lock onto the intruding object and provide real-time distance data.
-![image](https://github.com/CharlieWoodhouse/IoT-Security-System-Prototype/assets/147112008/d991736a-ae9d-437d-ae57-7b6648c31f7c)
+![image](https://github.com/CharlieWoodhouse/Security_System_Prototype1/assets/147112008/c23199e3-2cb9-4a29-aeea-a3bdab3615dc)
 ## Object Detection + Locking
 When scanning the environment, the ultrasonic sensor will identify if an object is in the specified range 
 based on the distance measurements. This is done by sending out a brief pulse through the trigPin to 
