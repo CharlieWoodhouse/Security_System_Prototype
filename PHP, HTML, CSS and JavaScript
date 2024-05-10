@@ -1,0 +1,214 @@
+<!-------------------------------------------------------------------------- PHP -------------------------------------------------------------------------->
+<?php
+    session_start();
+
+    // Default values
+    $defaults = [
+        'max_distance' => 30, // 30 cm
+        'print_time' => 2, // 2 seconds 
+        'min_angle' => 0, // 0 degrees
+        'max_angle' => 180, // 180 degrees
+        'servo_speed' => 1, // rotation speed of servo motor
+    ];
+
+    // Check if form was submitted
+    if (isset($_POST['submit'])) {
+    // Ensure that min_angle is not greater than max_angle
+    if ($_POST['min_angle'] > $_POST['max_angle']) {
+        // Swap min_angle and max_angle
+        $temp = $_POST['min_angle'];
+        $_POST['min_angle'] = $_POST['max_angle'];
+        $_POST['max_angle'] = $temp;
+    }
+
+    foreach($defaults as $key => $value) {
+        // Check if the key exists in the POST data
+        if (isset($_POST[$key])) {
+            $_SESSION[$key] = $_POST[$key];
+        }
+    }
+    saveSettingsToFile($_SESSION);
+    }
+
+    // Check if reset was clicked
+    if (isset($_POST['reset'])) {
+        foreach($defaults as $key => $value) {
+            $_SESSION[$key] = $value;
+        }
+        saveSettingsToFile($_SESSION);
+    }
+
+    // Function to save settings to a text file using JSON
+    function saveSettingsToFile($settings) {
+        $file = 'UpdatedSettings.txt';
+        // Remove any undefined array keys
+        $settings = array_intersect_key($settings, array_flip(array_keys($GLOBALS['defaults'])));
+        $data = json_encode($settings, JSON_PRETTY_PRINT);
+        file_put_contents($file, $data);
+    }
+
+    // Function to load settings from a text file
+    function loadSettingsFromFile() {
+        $file = 'UpdatedSettings.txt';
+        if (file_exists($file)) {
+            $data = file_get_contents($file);
+            $settings = json_decode($data, true);
+            return $settings;
+        }
+        return false;
+    }
+
+    // Load settings from file if available
+    $loadedSettings = loadSettingsFromFile();
+    if ($loadedSettings) {
+        $_SESSION = $loadedSettings;
+    }
+?>
+
+<!-------------------------------------------------------------------------- CSS -------------------------------------------------------------------------->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Settings Page</title>
+    <style>
+        /* CSS styles */
+        body {
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        h1 {
+            text-decoration: underline;
+            display: flex; /* Add flex display */
+            align-items: center; /* Center items vertically */
+        }
+        h1 img {
+            width: 30px; /* Set width of the image */
+            height: 30px; /* Set height of the image */
+            margin-right: 10px; /* Add some spacing between image and text */
+        }
+        label {
+            display: block;
+            width: 100%; /* Make labels full width */
+            margin-bottom: 5px;
+        }
+        .input-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .input-container input[type="text"],
+        .input-container input[type="number"],
+        .input-container input[type="range"] {
+            width: calc(50% - 10px); /* Adjust input width */
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        .input-container label {
+            width: 50%;
+            text-align: left;
+            padding-right: 10px;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049; 
+        }
+        .input-container input[type="range"] {
+            width: calc(50% - 10px); /* Adjust input width */
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+            background-color: #4CAF50; /* Change the background color to green */
+        }
+        .input-container.max-distance-container input[type="range"] {
+            width: 10px;
+        }
+        .input-container.max-distance-container input[type="number"] {
+            width: 90px;
+        }
+
+    </style>
+</head>
+<!-------------------------------------------------------------------------- HTML -------------------------------------------------------------------------->
+<body>
+<div class="container">
+        <h1><img src="SettingIcon.PNG" alt="Settings Icon"> Settings</h1> <!-- Added image -->
+        <h3>Ultrasonic Sensor Setting</h3>
+        <form id="settingsForm" method="post">
+            <div class="input-container max-distance-container">
+                <label for="max_distance">Max Distance (cm):</label>
+                <input type="range" min="1" max="100" value="<?php echo isset($_SESSION['max_distance']) ? $_SESSION['max_distance']
+                 : $defaults['max_distance']; ?>" class="slider" id="max_distance_slider" oninput="updateMaxDistance(this.value)"style="width:200px;">
+                <input type="number" id="max_distance" name="max_distance" value="<?php echo isset($_SESSION['max_distance']) ? $_SESSION['max_distance'] 
+                : $defaults['max_distance']; ?>" required>
+            </div>
+            <br> </br>
+            <h3>Speed of which information is printed Setting</h3>
+            <div class="input-container">
+                <label for="print_time">Time for Each Print (seconds):</label>
+                <input type="number" id="print_time" name="print_time" value="<?php echo isset($_SESSION['print_time']) ? $_SESSION['print_time']
+                 : $defaults['print_time']; ?>" required>
+            </div>
+            <br> </br>
+            <h3>Servo Motor Settings</h3>
+            <div class="input-container">
+                <label for="min_angle">Minimum Angle for Motor (degrees):</label>
+                <input type="number" min="0" max="179"id="min_angle" name="min_angle" value="<?php echo isset($_SESSION['min_angle']) ? $_SESSION['min_angle']
+                 : $defaults['min_angle']; ?>" required>
+            </div>
+            
+            <div class="input-container">
+                <label for="max_angle">Maximum Angle for Motor (degrees):</label>
+                <input type="number" min="1" max="180"id="max_angle" name="max_angle" value="<?php echo isset($_SESSION['max_angle']) ? $_SESSION['max_angle']
+                 : $defaults['max_angle']; ?>" required>
+            </div>
+            
+            <div class="input-container">
+                <label for="servo_speed">Rotational Speed of Motor (levels):</label>
+                <input type="number" id="servo_speed" name="servo_speed" value="<?php echo isset($_SESSION['servo_speed']) ? $_SESSION['servo_speed']
+                 : $defaults['servo_speed']; ?>" required>
+            </div>
+        </form>
+        <br> </br>
+        <button id="subbutton" type="submit" form="settingsForm" name="submit">'F' to Apply</button>
+        <button id="resetButton" type="submit" form="settingsForm" name="reset">'R' to Reset to Default</button>
+    </div>
+</body>
+</html>
+
+<!-------------------------------------------------------------------------- Javascript -------------------------------------------------------------------------->
+<script>
+    // Update textbox when slider changes
+    function updateMaxDistance(value) {
+        document.getElementById('max_distance').value = value;
+    }
+
+    // Function to handle key presses
+    document.addEventListener("keydown", function(event) {
+        console.log("Key pressed: " + event.key); // Debug message to check if key presses are detected
+        if (event.key === 'f') {
+            event.preventDefault(); // Prevent default behavior of the key
+            console.log("Form submission attempted"); // Debug message to check if form submission is attempted
+            document.getElementById("subbutton").click(); // Submit the form
+        } else if (event.key === 'r') {
+            event.preventDefault(); // Prevent default behavior of the key
+            console.log("Reset button clicked"); // Debug message to check if reset button is clicked
+            document.getElementById("resetButton").click(); // Click the reset button
+        }
+    });
+</script>
